@@ -2,9 +2,21 @@
 // file; the program copies it to /output/entry.png. Node 22, standard library.
 //
 // Outside the grader's container, MAKEFUN_OUTPUT_DIR stands in for /output:
-//   mkdir -p out && MAKEFUN_OUTPUT_DIR=out node main.ts
+//   MAKEFUN_OUTPUT_DIR=out node main.ts
 
-import { copyFileSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 
-copyFileSync(new URL('./entry.png', import.meta.url), join(process.env.MAKEFUN_OUTPUT_DIR ?? '/output', 'entry.png'));
+const outputDir = process.env.MAKEFUN_OUTPUT_DIR ?? '/output';
+const outputPath = join(outputDir, 'entry.png');
+
+try {
+  mkdirSync(outputDir, { recursive: true });
+  copyFileSync(new URL('./entry.png', import.meta.url), outputPath);
+  if (!existsSync(outputPath)) {
+    throw new Error(`output file was not written: ${outputPath}`);
+  }
+} catch (error) {
+  console.error(`failed to write ${outputPath}:`, error);
+  process.exit(1);
+}
